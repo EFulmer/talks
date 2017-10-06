@@ -1,0 +1,125 @@
+Slide 1:
+Good afternoon. I'm Eric Fulmer, I'm really glad to be here talking to you. This talk is a tutorial on decorators. 
+
+Slide 2: 
+My goal is to teach you what a decorator is and why it's useful, and it's something you should know.
+
+Slide 3:
+So, the question is, "what is a function?" We write them all the time, we know what they look like, but let's define it a little stricter. 
+
+Slide 4: 
+Not in the funcional programming, Haskell sense, because we're not talking Haskell, but stricter regardless. Yeah, "def" is the keyword, but that eventually becomes visual white noise to you. Let's stop thinking about `def1.
+
+Slide 5:
+So, you have a function, maybe it's a lamba, or a full function. 
+Either way, it takes some inputs, it does some business logic with those inputs, some calculations, then it returns something. 
+That's the geenral idea. 
+Maybe you don't explicitly take the arguments; maybe they're from a config file or some constant defined at the top level.
+And when your function returns something... maybe what it "returns" is some sort of I/O, like querying a database or sending or receiving from a message queue. But either way you do get something back.
+
+Slide 6:
+You take some input, you do some computations, you get some output. 
+That's a function.
+
+Slide 7:
+Different languages have different rules about functions. 
+Some languages impose restrictions, like on return types.
+But it's always input, computation, output.
+
+Slide 8:
+If you've seen functions like `map`, `filter`, and `reduce`, you know that they take functions for their first argument.
+Oftentimes, you use a lambda for this.
+Now say you want to use the same lambda across multiple calls to `map`, `filter`, `reduce`... you could bind it to a name.
+Like, `odd = lambda x: x % 2 != 0`.
+So you're assigning a lambda, which is kind of like a function, to a name!
+(open up IPython, type in the example, type in `type(odd)`)
+And it has attributes. In fact, all functions and lambdas have that `__call__` attribute. Calling the function like `odd(3)` is just `odd.__call__(3)`
+Functions are just another type of object with some special attributes.
+
+Slide 9:
+Functions are objects. They have a type, they have attributes, they have everything all the other objects have.
+
+Slide 10:
+So functions can take other functions as arguments, because functions are just another type of argument. No big deal. 
+They can return functions as argument, because functions are just another type of object.
+Functions that operate on other functions are called higher order functions. If you remember calculus, that's what a derivative does; it's an operator -- or in other words a function -- that calculates something new from another function!
+
+Slide 11:
+Let's put this all together to understand how it gives us decorators.
+We have functions, they take inputs and outputs, which can be other functions. 
+Decorators do this. They make it useful by adding additional behavior or "editing" the function somehow.
+
+Slide 12:
+Something which may be unintuitive is that the inner function saves variables that it references from outside.
+Salutation
+
+Slide 13:
+It's also syntactically valid to write a function inside another function.
+It's just like when you define a method inside of a class, or define a function at module-level.
+It's just another new object, of type function.
+And here's how you actually implement decorators.
+You have the decorating function.
+Then you have the function which gets decorated.
+And you re-assign the name to the decorated function.
+
+Slide 14:
+That's the tweet length description of a decorator.
+
+Slide 15:
+Another way to help you conceptualize it is linking it to another way that code uses other code.
+When I write a subclass, like for SQLAlchemy, it's to use existing behavior. For SQLAlchemy that's to create a class that corresponds with a database table.
+When I use a decorator, I'm creating behavior that needs to be fit into a ...
+
+Slide 16:
+Actually, I don't like the way the syntax looks.
+It's sort of confusing to me... re-binding functions just looks weird.
+You're reassigning a function name to actually point to another function.
+
+Slide 17:
+Turns out that the language maintainers agree, so in a classic appeal to authority I'll point you to the PEP on it!
+You can declare the decorator that decorates the function right above the function definition with the at sign.
+Think of it like at sounds similar to add, and the decorator is adding functionality.
+You may find that sort of contrived, but it may help you remember!
+
+Slide 18:
+Here's an example. It's kind of silly and contrived, but, well, it works.
+def reverse_args(f):
+    def g(*args, **kwargs):
+        return g(*reversed(args), **kwargs)
+    return g
+
+@reverse_args
+def foo(a, b):
+    return a + b
+
+print(foo('a', 'b'))
+
+Slide 19:
+Now a real example.
+Flask uses decorators to do URL routing. 
+In other words, you write the functions that handle requests for specific URLs on your app, then use the Flask.route decorator to actually hook them up to the app.
+The decorator is pretty simple. 
+You give it the URL that this function handles the display and logic for in the argument to the route.
+Then it registers the function with Flask as the view handler for that specific URL.
+The keyword arguments handle other things like HTTP request parameters.
+
+Slide 20:
+So it looks like this. Simple!
+
+Slide 21:
+This is actually pretty common in the standard library! We have a whole bunch listed here.
+Property is for inside class definitions: you can make special getters and setters for specific object attributes.
+functools.partial is pretty straight forward and pretty useful. What it does is make a new function with preprovided values for some arguments if you're always going to be calling the function with those arguments, and make it a little simpler to call.
+unittest uses them a lot too.
+
+
+Slide 22: 
+To figure out when a decorator is your choice, think about it. 
+functools.partial "saves" some of the arguments for a function and then calls it later with the rest of them.
+Flask.route sets the function up with the Flask app.
+Generally, they call the function while doing some extra stuff. 
+When you need to consistently call a function in a special or different way, consider a decorator.
+
+
+Slide 23: 
+And that's it. Questions?

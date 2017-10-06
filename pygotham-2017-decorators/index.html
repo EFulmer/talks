@@ -1,0 +1,346 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Functions Within Functions: An Intro to Decorators</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+              <section> <!-- Slide 1 -->
+                <h2>Functions Within Functions: An Intro to Decorators</h2>
+                <br />
+                <br />
+                Eric Fulmer
+                <br />
+                PyGotham 2017
+                <br />
+                <a href="http://github.com/EFulmer">GitHub.com/EFulmer</a>
+                <br />
+                <a href="http://www.ericfulmer.com">www.ericfulmer.com</a>
+              </section>
+
+              <section> <!-- Slide 2 -->
+                <h3>Goals of this talk</h3>
+                <ul>
+                  <li>Understand what the heck a decorator is</li>
+                  <li>Understand why you should care</li>
+                  <li>Gain a little more intuition on what a function is</li>
+                  <li>Ideally, laugh at a few silly things</li>
+                </ul>
+              </section>
+
+              <section> <!-- Slide 3 -->
+                <h3>Motivating question: What is a function?</h3>
+                An example?
+              </section>
+
+              <section> <!-- Slide 4 -->
+                <h3>Motivating question: What is a function?</h3>
+                <code>def foo(): ... </code> -- No!
+                <br>
+                <br>
+                (lambdas exist, too)
+              </section>
+
+              <section> <!-- Slide 5 -->
+                <h3>Motivating question: What is a function?</h3>
+                <code>def foo(): ... </code> -- No!
+                <br />
+                <br />
+                <code>lambda x: sum(x) / len(x) </code>
+                <br />
+                <br />
+                There's more to it than either of these.
+              </section>
+
+              <section> <!-- Slide 6 -->
+                <h4>What is the most basic definition for a function?</h4>
+                Logical unit of code that takes some inputs and produces some outputs:
+                <br />
+                <br />
+                <ul>
+                  <li>Inputs are usually, but not always arguments -- could use global constants, etc.</li>
+                  <li>Outputs aren't always <code>return</code>ed; can print, insert into a database...</li>
+                </ul>
+              </section>
+
+              <section> <!-- Slide 7 -->
+                <h3>Function = unit of code that takes inputs and produces outputs</h3>
+                <br />
+                <br />
+                As far as we're concerned, that's all a function is.
+              </section>
+
+              <section> <!-- Slide 8 -->
+                <h3>An important fact about Python:</h3>
+                <em>everything</em> is an object.
+                <ul>
+                  <li><code>3</code> is an object (differs from Java ...)</li>
+                  <li>Dictionaries, lists, tuples, user-defined classes are objects</li>
+                  <li>Classes are objects</li>
+                  <li>Modules are objects (do <code>import math; print(type(math))</code>)</li>
+                  <li>Most importantly here: <strong>Functions are objects!</strong></li>
+                </ul>
+              </section>
+
+              <!-- This slide needs revision; s/top level/module level? -->
+              <section> <!-- Slide 9 -->
+                <h4>Functions are Objects</h4>
+                Defining a function or class at the top level is just like defining a global "constant" like <code>CONFIG_FILE = '../config.json'</code>
+                <br />
+                <br />
+                Following from that, we have a <strong>Key Point:</strong> You can define functions inside other functions, since they're just another object.
+                <br />
+                <br />
+                If you've seen this before and been confused, now you understand a little better.
+              </section>
+
+              <section> <!-- Slide 10 -->
+                <h3>Higher-Order Functions</h3>
+                <strong>Higher-order functions</strong> are functions that take other functions as arguments or return other functions as arguments.
+                <br />
+                <br />
+                Fairly common in the standard library: <code>map</code>, <code>filter</code>, <code>functools</code> module...
+                <br />
+                <br />
+                If you've taken calculus, the derivative or integral of a function is a higher order function. <code>derivative(x^2) = 2*x</code>
+              </section>
+
+              <section> <!-- Slide 11 -->
+                <h3>DECORATORS!</h3>
+                Putting it all together...
+                <br />
+                <br />
+                ...Decorators are functions...
+                <br />
+                <br />
+                ...that take other functions and augment their behavior by doing extra stuff.
+              </section>
+
+              <!-- TODO: make example better, might remove it -->
+              <section> <!-- Slide 12 -->
+                <h3>Scope?</h3>
+                <pre><code>
+def greeter(salutation=None):
+    if not salutation:
+        saluation = 'Hello'
+    def baz(name):
+        return '{}, {}!'.format(salutation, name)
+    return baz
+                </code></pre>
+              </section>
+
+              <section> <!-- Slide 13 -->
+                Common pattern:
+                <pre><code>
+def decorator(function):
+    def inner(arg1):
+        # "decorate" function somehow by doing additional stuff
+        return function(arg1)
+    return inner
+
+# ...
+def func(arg1):
+    # stuff with arg1
+    return something_cool
+func = decorator(func)
+                </code></pre>
+              </section>
+
+              <section> <!-- Slide 14 -->
+                <h4>What this is doing</h4>
+                Create a function...
+                <br>
+                ...Which takes another function...
+                <br>
+                ...And returns a new function which does some other stuff and calls the original function
+              </section>
+
+              <section> <!-- Slide 15 -->
+                Kind of like the opposite of inheritance
+                <br>
+                <br>
+                <strong>Inheritance</strong>: You use existing class' methods, behavior to do something new
+                <br>
+                <strong>Decorator</strong>: Existing function does something with your new code
+              </section>
+
+              <section> <!-- Slide 16 -->
+                <h4>Problem</h4>
+                <code>func = decorator(func)</code> looks kinda weird.
+                <br />
+                <br />
+                It also puts important data about <code>func</code> after its definition.
+              </section>
+
+              <section> <!-- Slide 17 -->
+                <h4>Solution!</h4>
+                Syntactic sugar added for this in 2.4; described in <a href='https://www.python.org/dev/peps/pep-0318/'>PEP-318</a>
+                <br>
+                Example: 
+                <pre><code>
+class Ramone(object):
+    def __init__(self, name, instrument):
+        self.name = name
+        self.instrument = instrument
+
+    @property
+    def countdown(self):
+        if not hasattr(self, '_countdown'):
+            self._countdown = 1
+          return self._countdown
+
+    @countdown.setter
+    def countdown(self, new_countdown):
+        if new_countdown not in (1, 2, 3, 4):
+            raise ValueError("ONE TWO THREE FOUR!")
+        self._countdown = new_countdown
+                </code></pre>
+                ("@" -&gt; "at"/"add" -&gt; "adding functionality")
+              </section>
+
+              <section> <!-- Slide 18 -->
+                <h4>Example</h4>
+                Reverse order of args
+                <pre><code>
+def reverse_args(f):
+    def g(*args, **kwargs):
+        return g(*reversed(args), **kwargs)
+    return g
+
+@reverse_args
+def foo(a, b):
+    return a + b
+
+print(foo('a', 'b'))
+                </code></pre>
+              </section>
+
+              <section> <!-- Slide 19 -->
+                <h3>Example: Flask's route method</h3>
+                <pre><code>
+# in the Flask class itself
+def route(self, rule, **options):
+    def decorator(f):
+        endpoint = options.pop('endpoint', None)
+        self.add_url_rule(rule, endpoint, f, **options)
+        return f
+    return decorator
+                </code></pre>
+                <code>add_url_rule</code> parses the other arguments (i.e. <code>methods</code>) then adds the function to Flask's internal view mapping, mapped to the route.
+              </section>
+
+              <section> <!-- Slide 20 -->
+                <h4>Usage</h4>
+                <pre><code>
+@app.route("/")
+def hello():
+    return "Hello World!"
+                </code></pre>
+              </section>
+
+              <section> <!-- Slide 21 -->
+                Useful standard library decorators:
+                <ul>
+                  <li><code>property</code>: override getter/setter/deleter behavior per attribute</li>
+                  <li><code>staticmethod</code>: method that doesn't use self</li>
+                  <li><code>classmethod</code>: method which treats the class as self</li>
+                  <li><code>functools.partial</code>: give a function some of its arguments now, and the rest later</li>
+                  <li><code>unittest</code> uses decorators to describe test cases; <code>skip</code>, <code>expectedFailure</code> hopefully self-explanatory!
+                </ul>
+              </section>
+
+              <section> <!-- Slide 22 -->
+                <h3>How do you know when you should write a decorator?</h3>
+                Consider what they do:
+                <br />
+                <br />
+                Decorators add extra behavior to functions.
+                <br />
+                <br />
+                When you need a function to be called in a different way, use a decorator.
+              </section>
+
+              <section> <!-- Slide 23 -->
+                <h4>Intermission for the evil decorator...</h4>
+              </section>
+
+              <section> <!-- Slide 24 -->
+                <h4>Revisiting reversed</h4>
+                <pre><code>
+def reverse_args(f):
+    def g(*args, **kwargs):
+        return g(*reversed(args), **kwargs)
+    return g
+
+@reverse_args
+def foo(a, b):
+    return a + b
+
+print(foo('a', 'b'))
+                </code></pre>
+              </section>
+
+              <section> <!-- slide 25 -->
+                <h4>Let's make it worse.</h4>
+                You can 
+              </section>
+
+              <section> <!-- Slide 24 -->
+                <h4>Questions?</h4>
+                The PEP is a good resource too.
+                <br />
+                <br />
+                <a href="https://www.python.org/dev/peps/pep-0318/">PEP-318 -- Decorators for Functions and Methods</a>
+                <a href="http://github.com/EFulmer">GitHub.com/EFulmer</a>
+              </section>
+
+              <section> <!-- Slide 24 -->
+                <h1>Fin</h1>
+                <br />
+                <br />
+                <a href="http://github.com/EFulmer">GitHub.com/EFulmer</a>
+                <br />
+                <a href="http://www.ericfulmer.com">www.ericfulmer.com</a>
+                <br />
+                <a href="mailto:eric.r.fulmer@gmail.com">eric.r.fulmer@gmail.com</a>
+              </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
